@@ -1,0 +1,12 @@
+service: python-layers
+provider:
+  name: aws
+  runtime: python3.8
+  stage: ${file(./config.json):STAGE}
+  region: ${file(./config.json):REGION}
+layers:
+  python-app-dependencies:
+    path: layers/tools
+    compatibleRuntimes:
+      - python3.8
+    description: "Dependencies for python functions"

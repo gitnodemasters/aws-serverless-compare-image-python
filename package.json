@@ -1,0 +1,10 @@
+{
+  "name": "pytesseract-ocr-api",
+  "description": "",
+  "version": "0.1.0",
+  "devDependencies": {
+    "serverless-prune-plugin": "^1.4.3",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "serverless-python-requirements": "^5.1.0"
+  }
+}

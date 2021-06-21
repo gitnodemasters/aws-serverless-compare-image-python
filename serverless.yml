@@ -1,0 +1,85 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: compare-pdf-doc-api
+custom:
+  # pythonRequirements:
+  #   dockerizePip: true
+  #   fileName: ./requirements.txt
+  #   slim: true
+  # prune:
+  #   automatic: true
+  #   number: 3
+  corsStatements:
+    origin: '*' # <-- Specify allowed origin. If required, allowed origin can be set to point from webapp deployment URL.
+    headers: # <-- Specify allowed headers
+      - Content-Type
+      - X-Amz-Date
+      - Authorization
+      - X-Api-Key
+      - X-Amz-Security-Token
+      - X-Amz-User-Agent
+      - Access-Control-Allow-Headers
+      - Access-Control-Allow-Origin
+    allowCredentials: false
+  lambdaBasicStatements:
+    Effect: Allow
+    Action: # Gives permission to Lambda in a specific region
+      - logs:CreateLogGroup
+      - logs:CreateLogStream
+      - logs:PutLogEvents
+      - s3:*
+    Resource: "*"    
+provider:
+  name: aws
+  runtime: python3.8
+  environment:
+    REGION: ${file(./src/config.json):REGION}
+    STAGE: ${file(./src/config.json):STAGE}
+    COMPARE_BUCKET: ${self:resources.Resources.compareImage.Properties.BucketName}
+  stage: ${file(./src/config.json):STAGE}
+  region: ${file(./src/config.json):REGION}
+  iamRoleStatements:
+    - ${self:custom.lambdaBasicStatements} 
+package:
+  exclude:
+    - ./**
+  include:
+    - ./src/**
+    # - ./requirements.txt
+    - ./src/config.json
+functions:
+  comparePdfDoc:
+    handler: src/comparePdfDoc/lambda_function.lambda_handler
+    name: ${self:provider.stage}-comparePdfDoc
+    description: Compare images between Pdf and Doc Lambda handler
+    timeout: 60
+    events:
+      - http:
+          path: compare
+          method: post
+          cors: ${self:custom.corsStatements}
+          response:
+            headers:
+              Content-Type: "'application/json'"
+            template: $input.path('$.body')
+          integration: lambda    
+resources:
+  Resources:
+    compareImage:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: compare-pdf-doc-src
+# plugins:
+#   - serverless-python-requirements
+#   - serverless-pseudo-parameters
+#   - serverless-prune-plugin
